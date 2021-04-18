@@ -24,6 +24,7 @@ app.get('/',(req, res) => {
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
   const appointmentCollection = client.db("mediCare").collection("appointments");
+  const servicesCollection = client.db("mediCare").collection("services");
 
   // Add Appointments: 
 
@@ -55,6 +56,17 @@ client.connect(err => {
       })
   })
 
+  // Services: 
+
+  app.get('/services', (req, res) => {
+    servicesCollection.find({})
+        .toArray((err, documents) => {
+            res.send(documents);
+        })
+});
+
+
+
   // Add a service:
 
   app.post('/addService', (req, res) => {
@@ -64,15 +76,19 @@ client.connect(err => {
     const price = req.body.price;
     const space = req.body.space;
 
-    console.log(name, time, price, space, file);
+    const newImg = file.data;
+        const encImg = newImg.toString('base64');
 
-    file.mv(`${__dirname}/services/${file.name}`, err => {
-        if(err){
-            console.log(err);
-            return res.status(500).send({msg: 'Failed to upload Image'});
-        }
-        return res.send({name: file.name, path: `/${file.name}`})
-    })
+        var image = {
+            contentType: file.mimetype,
+            size: file.size,
+            img: Buffer.from(encImg, 'base64')
+        };
+
+        servicesCollection.insertOne({ name, time, price, space, image })
+            .then(result => {
+                res.send(result.insertedCount > 0);
+            })
 
 
 })
