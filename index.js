@@ -24,7 +24,7 @@ app.get('/',(req, res) => {
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
   const appointmentCollection = client.db("mediCare").collection("appointments");
-  const servicesCollection = client.db("mediCare").collection("services");
+  const serviceCollection = client.db("mediCare").collection("services");
 
   // Add Appointments: 
 
@@ -59,7 +59,7 @@ client.connect(err => {
   // Services: 
 
   app.get('/services', (req, res) => {
-    servicesCollection.find({})
+    serviceCollection.find({})
         .toArray((err, documents) => {
             res.send(documents);
         })
@@ -72,48 +72,44 @@ client.connect(err => {
   app.post('/addService', (req, res) => {
     const file = req.files.file;
     const name = req.body.name;
-    const time = req.body.time;
-    const price = req.body.price;
-    const space = req.body.space;
-
-    const newImg = file.data;
-        const encImg = newImg.toString('base64');
-
-        var image = {
-            contentType: file.mimetype,
-            size: file.size,
-            img: Buffer.from(encImg, 'base64')
-        };
-
-        servicesCollection.insertOne({ name, time, price, space, image })
-            .then(result => {
-                res.send(result.insertedCount > 0);
-            })
-
-
-})
+    const post = req.body.post;
+    const from = req.body.from;
+    const contact = req.body.contact;
+  
+    console.log(name, post, from, contact, file);
+  
+    file.mv(`${__dirname}/services/${file.name}`, err => {
+        if(err){
+            console.log(err);
+            return res.status(500).send({msg: 'Failed to upload Image'});
+        }
+        return res.send({name: file.name, path: `/${file.name}`})
+    })
+  
+  
+  })
 
 // Add a review: 
 
-app.post('/addreview', (req, res) => {
-  const file = req.files.file;
-  const name = req.body.name;
-  const post = req.body.post;
-  const from = req.body.from;
-  const contact = req.body.contact;
+// app.post('/addreview', (req, res) => {
+//   const file = req.files.file;
+//   const name = req.body.name;
+//   const post = req.body.post;
+//   const from = req.body.from;
+//   const contact = req.body.contact;
 
-  console.log(name, post, from, contact, file);
+//   console.log(name, post, from, contact, file);
 
-  file.mv(`${__dirname}/services/${file.name}`, err => {
-      if(err){
-          console.log(err);
-          return res.status(500).send({msg: 'Failed to upload Image'});
-      }
-      return res.send({name: file.name, path: `/${file.name}`})
-  })
+//   file.mv(`${__dirname}/services/${file.name}`, err => {
+//       if(err){
+//           console.log(err);
+//           return res.status(500).send({msg: 'Failed to upload Image'});
+//       }
+//       return res.send({name: file.name, path: `/${file.name}`})
+//   })
 
 
-})
+// })
 
 
 });
